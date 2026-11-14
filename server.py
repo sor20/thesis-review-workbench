@@ -157,8 +157,8 @@ def normalize(entry: dict, it: dict) -> tuple[dict | None, list[str]]:
     note = str(entry.get("note") or "").strip()
     if it["type"] in ("text", "chart", "review"):
         raw = _pick(entry, "decision", "verdict", "status")
-        if raw is None:
-            return None, ["缺少 decision/verdict 字段"]
+        if raw is None or (isinstance(raw, str) and not raw.strip()):
+            return None, []  # 空值视为未判定，跳过而不报错
         table = REVIEW_VERDICTS if it["type"] == "review" else TEXT_VERDICTS
         key = str(raw).strip()
         val = table.get(key) or table.get(key.lower())
@@ -167,8 +167,10 @@ def normalize(entry: dict, it: dict) -> tuple[dict | None, list[str]]:
         return {"decision": val, "note": note}, errs
 
     raw = _pick(entry, "choice", "choices", "decision", "option")
-    if raw is None:
-        return None, ["缺少 choice 字段"]
+    if raw is None or (isinstance(raw, (list, tuple)) and not raw):
+        return None, []
+    if isinstance(raw, str) and not raw.strip():
+        return None, []
     choices = raw if isinstance(raw, list) else [raw]
     choices = [str(c).strip() for c in choices if str(c).strip()]
     valid = [str(o.get("k")) for o in it.get("options") or []]
@@ -203,7 +205,6 @@ def apply_decisions(payload: dict, items: list[dict]) -> dict:
             if key in seen:
                 errors.append({"type": t, "id": iid, "error": "重复条目"})
                 continue
-            seen.add(key)
             it = imap.get(key)
             if not it:
                 errors.append({"type": t, "id": iid, "error": "条目不存在"})
@@ -215,6 +216,9 @@ def apply_decisions(payload: dict, items: list[dict]) -> dict:
             if errs:
                 errors.append({"type": t, "id": iid, "error": "；".join(errs)})
                 continue
+            if norm is None:
+                continue
+            seen.add(key)
             applied[t][iid] = norm
 
     flat = payload.get("items")
@@ -236,11 +240,13 @@ def apply_decisions(payload: dict, items: list[dict]) -> dict:
             if not it:
                 errors.append({"type": t, "id": iid, "error": "条目不存在"})
                 continue
-            seen.add(key)
             norm, errs = normalize(entry, it)
             if errs:
                 errors.append({"type": t, "id": iid, "error": "；".join(errs)})
                 continue
+            if norm is None:
+                continue
+            seen.add(key)
             applied[t][iid] = norm
 
     counts = {t: len(applied[t]) for t in TYPE_ORDER}
