@@ -1,0 +1,22 @@
+{
+  "schema": "review-workbench/decisions@1",
+  "reviewer": "example-agent",
+  "text": {
+    "01": { "decision": "通过", "note": "示例：已是改写后的句子。" },
+    "02": { "decision": "要改", "note": "示例：结构过渡仍可压缩。" },
+    "03": { "decision": "有疑问", "note": "示例：待复核样本的结论未定。" }
+  },
+  "chart": {
+    "G-1-2": { "decision": "要改", "note": "示例：dpi 与最小字号两项异常。" },
+    "T-1-2": { "decision": "通过", "note": "示例：跨页续表已重复表头。" }
+  },
+  "decision": {
+    "D-01": { "choice": ["C"], "note": "示例：选择补一句限制条件。" },
+    "D-04": { "choice": ["A"], "note": "示例：只提暗部。" }
+  },
+  "review": {
+    "A-01": { "decision": "采纳", "note": "示例：补上「初步」。" },
+    "A-03": { "decision": "存疑", "note": "示例：需要原始统计表才能确认标准差。" },
+    "K-01": { "decision": "不采纳", "note": "示例：图注与正文已一致。" }
+  }
+}
